@@ -1,0 +1,244 @@
+<!DOCTYPE html>
+<html lang="ru" data-theme="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Русская Рулетка — 6-Chamber Revolver</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <div class="flash-overlay" id="flashOverlay" aria-hidden="true"></div>
+
+  <div class="app-container">
+    <!-- Верхняя панель: Логотип, Виджет даты/времени, Управление (Звук, Тема, Язык) -->
+    <header class="top-bar">
+      <div class="brand">
+        <div class="brand-icon" aria-hidden="true">
+          <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="12" cy="12" r="9"></circle>
+            <circle cx="12" cy="12" r="2"></circle>
+            <circle cx="12" cy="6.5" r="1.3" fill="currentColor"></circle>
+            <circle cx="16.8" cy="9.2" r="1.3" fill="currentColor"></circle>
+            <circle cx="16.8" cy="14.8" r="1.3" fill="currentColor"></circle>
+            <circle cx="12" cy="17.5" r="1.3" fill="currentColor"></circle>
+            <circle cx="7.2" cy="14.8" r="1.3" fill="currentColor"></circle>
+            <circle cx="7.2" cy="9.2" r="1.3" fill="currentColor"></circle>
+          </svg>
+        </div>
+        <div>
+          <h1 class="brand-title" data-i18n="appTitle">Русская Рулетка</h1>
+          <p class="brand-subtitle" data-i18n="appSubtitle">Классический 6-зарядный револьвер</p>
+        </div>
+      </div>
+
+      <!-- Динамический виджет времени и даты -->
+      <div class="datetime-widget" aria-live="polite">
+        <div class="datetime-time" id="clockTime">--:--:--</div>
+        <div class="datetime-date" id="clockDate">---</div>
+      </div>
+
+      <!-- Панель настроек: Звук, Тема, Язык -->
+      <div class="controls-bar">
+        <button type="button" class="icon-btn" id="soundToggleBtn" aria-label="Toggle Sound">
+          <span class="icon-btn-symbol" id="soundIcon">🔊</span>
+          <span class="icon-btn-text" id="soundLabel" data-i18n="soundOn">Звук: Вкл</span>
+        </button>
+
+        <button type="button" class="icon-btn" id="themeToggleBtn" aria-label="Toggle Theme">
+          <span class="icon-btn-symbol" id="themeIcon">🌙</span>
+          <span class="icon-btn-text" id="themeLabel" data-i18n="themeDark">Тёмная</span>
+        </button>
+
+        <div class="select-wrapper">
+          <label for="langSelect" class="sr-only" data-i18n="langLabel">Язык</label>
+          <select id="langSelect" class="lang-select" aria-label="Language selector">
+            <option value="ru">🇷🇺 Русский</option>
+            <option value="en">🇺🇸 English</option>
+            <option value="kk">🇰🇿 Қазақша</option>
+            <option value="es">🇪🇸 Español</option>
+            <option value="de">🇩🇪 Deutsch</option>
+          </select>
+        </div>
+      </div>
+    </header>
+
+    <!-- Основная сетка приложения -->
+    <main class="main-grid">
+      <!-- Левая колонка: Настройки партии и Статистика -->
+      <section class="panel side-panel">
+        <h2 class="panel-title" data-i18n="settingsTitle">Параметры игры</h2>
+
+        <!-- Выбор режима игры -->
+        <div class="control-group">
+          <label class="control-label" for="modeSelect" data-i18n="gameModeLabel">Режим игры</label>
+          <select id="modeSelect" class="ui-select">
+            <option value="solo" data-i18n="modeSolo">Одиночный (На выживание)</option>
+            <option value="bot" data-i18n="modeBot">Против Дилера (ИИ)</option>
+            <option value="pvp" data-i18n="modePvp">2 Игрока (На одном экране)</option>
+          </select>
+        </div>
+
+        <!-- Выбор числа боевых патронов (1-5) -->
+        <div class="control-group">
+          <div class="control-header">
+            <span class="control-label" data-i18n="bulletsCountLabel">Боевых патронов в барабане</span>
+            <span class="badge-accent" id="bulletCountValue">1 / 6</span>
+          </div>
+          <div class="bullet-selector" id="bulletSelector" role="radiogroup" aria-label="Bullets count">
+            <button type="button" class="bullet-opt active" data-bullets="1">1</button>
+            <button type="button" class="bullet-opt" data-bullets="2">2</button>
+            <button type="button" class="bullet-opt" data-bullets="3">3</button>
+            <button type="button" class="bullet-opt" data-bullets="4">4</button>
+            <button type="button" class="bullet-opt" data-bullets="5">5</button>
+          </div>
+        </div>
+
+        <!-- Индикатор вероятности выстрела -->
+        <div class="risk-meter">
+          <div class="risk-header">
+            <span data-i18n="riskLabel">Риск выстрела сейчас</span>
+            <strong id="riskPercent">16.7%</strong>
+          </div>
+          <div class="risk-bar-bg">
+            <div class="risk-bar-fill" id="riskBarFill" style="width: 16.7%"></div>
+          </div>
+          <p class="risk-hint" id="chambersRemainingText">Осталось камор: 6</p>
+        </div>
+
+        <!-- Блок статистики (сохраняется в localStorage) -->
+        <div class="stats-section">
+          <div class="stats-header">
+            <h3 class="panel-subtitle" data-i18n="statsTitle">Статистика</h3>
+            <button type="button" class="text-btn" id="resetStatsBtn" data-i18n="resetStats">Сбросить</button>
+          </div>
+
+          <div class="stats-grid">
+            <div class="stat-card">
+              <span class="stat-value" id="statSurvived">0</span>
+              <span class="stat-label" data-i18n="statSurvived">Успешных ходов</span>
+            </div>
+            <div class="stat-card">
+              <span class="stat-value" id="statDeaths">0</span>
+              <span class="stat-label" data-i18n="statLosses">Поражений</span>
+            </div>
+            <div class="stat-card">
+              <span class="stat-value highlight" id="statStreak">0</span>
+              <span class="stat-label" data-i18n="statStreak">Текущая серия</span>
+            </div>
+            <div class="stat-card">
+              <span class="stat-value gold" id="statBest">0</span>
+              <span class="stat-label" data-i18n="statBest">Рекорд серии</span>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Центральная колонка: Визуализация 6-зарядного барабана и управление -->
+      <section class="panel center-stage" id="stagePanel">
+        <!-- Индикатор текущего хода / статуса -->
+        <div class="turn-banner" id="turnBanner">
+          <span class="turn-dot"></span>
+          <span id="turnText" data-i18n="turnPlayer1">Ваш ход</span>
+        </div>
+
+        <!-- Сцена с 6-зарядным барабаном -->
+        <div class="revolver-stage">
+          <!-- Указатель бойка (верхняя позиция 12 часов) -->
+          <div class="firing-pin-marker" title="Firing Pin">
+            <span class="pin-label" data-i18n="firingPin">БОЁК</span>
+            <div class="pin-arrow">▼</div>
+          </div>
+
+          <!-- Вращающийся 6-зарядный барабан -->
+          <div class="cylinder-outer" id="cylinderOuter">
+            <div class="cylinder-wheel" id="cylinderWheel">
+              <!-- Каморы 0..5 располагаются по кругу через CSS-переменные -->
+              <div class="chamber" data-index="0" style="--angle: 0deg;">
+                <span class="chamber-num">1</span>
+                <div class="chamber-inner"></div>
+              </div>
+              <div class="chamber" data-index="1" style="--angle: 60deg;">
+                <span class="chamber-num">2</span>
+                <div class="chamber-inner"></div>
+              </div>
+              <div class="chamber" data-index="2" style="--angle: 120deg;">
+                <span class="chamber-num">3</span>
+                <div class="chamber-inner"></div>
+              </div>
+              <div class="chamber" data-index="3" style="--angle: 180deg;">
+                <span class="chamber-num">4</span>
+                <div class="chamber-inner"></div>
+              </div>
+              <div class="chamber" data-index="4" style="--angle: 240deg;">
+                <span class="chamber-num">5</span>
+                <div class="chamber-inner"></div>
+              </div>
+              <div class="chamber" data-index="5" style="--angle: 300deg;">
+                <span class="chamber-num">6</span>
+                <div class="chamber-inner"></div>
+              </div>
+
+              <!-- Центральная ось барабана -->
+              <div class="cylinder-axis">
+                <div class="axis-star"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Статусное сообщение раунда -->
+        <div class="status-box" id="statusBox" role="status" aria-live="polite">
+          <p class="status-title" id="statusTitle" data-i18n="statusReadyTitle">Барабан заряжен</p>
+          <p class="status-desc" id="statusDesc" data-i18n="statusReadyDesc">Крутите барабан или сразу нажимайте на курок.</p>
+        </div>
+
+        <!-- Кнопки действий -->
+        <div class="action-buttons">
+          <button type="button" class="btn btn-secondary" id="spinBtn">
+            <span class="btn-icon">🔄</span>
+            <span data-i18n="btnSpin">Крутить барабан</span>
+          </button>
+
+          <button type="button" class="btn btn-danger" id="triggerBtn">
+            <span class="btn-icon">💥</span>
+            <span data-i18n="btnTrigger">Спустить курок</span>
+          </button>
+
+          <button type="button" class="btn btn-outline" id="reloadBtn">
+            <span class="btn-icon">🔃</span>
+            <span data-i18n="btnReload">Новая партия</span>
+          </button>
+        </div>
+      </section>
+
+      <!-- Правая колонка: Журнал ходов и легенда камор -->
+      <section class="panel log-panel">
+        <div class="log-header">
+          <h2 class="panel-title" data-i18n="logTitle">Журнал событий</h2>
+          <button type="button" class="text-btn" id="clearLogBtn" data-i18n="clearLog">Очистить</button>
+        </div>
+
+        <!-- Легенда состояний камор -->
+        <div class="chamber-legend">
+          <div class="legend-item">
+            <span class="legend-dot unknown"></span>
+            <span data-i18n="legendUnknown">Неизвестно</span>
+          </div>
+          <div class="legend-item">
+            <span class="legend-dot empty"></span>
+            <span data-i18n="legendEmpty">Холостой (Щелчок)</span>
+          </div>
+          <div class="legend-item">
+            <span class="legend-dot live"></span>
+            <span data-i18n="legendLive">Боевой патрон</span>
+          </div>
+        </div>
+
+        <ul class="log-list" id="logList" aria-live="polite"></ul>
+      </section>
+    </main>
+  </div>
+
+  <script src="script.js"></script>
+</body>
+</html>
